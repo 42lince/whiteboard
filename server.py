@@ -39,15 +39,15 @@ def close_connection(exception):
 
 @app.route('/')
 def root():
-    conn = get_db()
-    c = conn.cursor()
-    s = "SELECT squawk from squawks order by submitdate desc"
-    c.execute(s)
-    allrows = c.fetchall()
-    allsquawks = []
-    for s in allrows:
-        allsquawks.append(s[0])
-    return render_template('home.html', allsquawks=allsquawks)
+    #conn = get_db()
+    #c = conn.cursor()
+    #s = "SELECT squawk from squawks order by submitdate desc"
+    #c.execute(s)
+    #allrows = c.fetchall()
+    #allsquawks = []
+    #for s in allrows:
+    #    allsquawks.append(s[0])
+    return render_template('index.html')
 
 
 @app.route('/submitNewSquawk', methods=["POST"])
