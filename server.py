@@ -1,7 +1,7 @@
 from flask import Flask, g, render_template, request, redirect
 import sqlite3
 from datetime import datetime
-
+from price import Price
 # -- leave these lines intact --
 app = Flask(__name__)
 
@@ -39,15 +39,53 @@ def close_connection(exception):
 
 @app.route('/')
 def root():
-    #conn = get_db()
-    #c = conn.cursor()
-    #s = "SELECT squawk from squawks order by submitdate desc"
-    #c.execute(s)
-    #allrows = c.fetchall()
-    #allsquawks = []
-    #for s in allrows:
-    #    allsquawks.append(s[0])
-    return render_template('index.html')
+    conn = get_db()
+    c = conn.cursor()
+    s = "SELECT * from prices order by tenor"
+    c.execute(s)
+    allrows = c.fetchall()
+    d = dict()
+    for row in allrows:
+        tenor = row[1]
+        broker = row[0]
+        p = row[2]
+        direction = row[3]
+        qty = row[4]
+        firm_price = row[5]
+        client = row[6]
+
+        price = Price(tenor, broker, direction, p, firm_price, qty, client)
+
+        if tenor in d.keys():
+            d[tenor][direction].append(price)
+        else:
+            d[tenor] = {'sell':[], 'buy':[]}
+            d[tenor][direction].append(price)
+    
+
+    tablerows = []
+    for key in d.keys():
+        d[key]['buy'].sort(key=lambda x: x.p, reverse=True)
+        d[key]['sell'].sort(key=lambda x : x.p, reverse=True)
+        i = 0
+        j = 0
+        while i < len(d[key]['buy']) or j < len(d[key]['sell']):
+            if i == len(d[key]['buy']):
+                sell_p = d[key]['sell'][j]
+                tablerows.append([sell_p.tenor, '', '', '', '', sell_p.p, sell_p.qty, sell_p.client, sell_p.broker])
+                j = j + 1
+            elif j == len(d[key]['sell']):
+                buy_p = d[key]['buy'][i]
+                tablerows.append([buy_p.tenor, buy_p.broker, buy_p.client, buy_p.qty, buy_p.p, '','','',''])
+                i = i + 1
+            else:
+                sell_p = d[key]['sell'][j]
+                buy_p = d[key]['buy'][i]
+                tablerows.append([buy_p.tenor, buy_p.broker, buy_p.client, buy_p.qty, buy_p.p, sell_p.p, sell_p.qty, sell_p.client, sell_p.broker])
+                i = i + 1
+                j = j + 1
+
+    return render_template('index.html', pricetable=tablerows)
 
 
 @app.route('/submitNewSquawk', methods=["POST"])
@@ -64,4 +102,4 @@ def submitNewSquawk():
     return redirect('/')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
