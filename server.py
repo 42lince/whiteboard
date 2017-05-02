@@ -2,6 +2,7 @@ from flask import Flask, g, render_template, request, redirect
 import sqlite3
 from datetime import datetime
 from price import Price
+import json
 # -- leave these lines intact --
 app = Flask(__name__)
 
@@ -87,19 +88,37 @@ def root():
 
     return render_template('index.html', pricetable=tablerows)
 
-
-@app.route('/submitNewSquawk', methods=["POST"])
-def submitNewSquawk():
-    if len(str(request.form["squawk"])) > 140:
-        return render_template('home.html', error="Invalid squawk, too long")
+@app.route('/update',methods=['POST'])
+def update():
+    tabledata = request.form['tabledata']
+    #print(tabledata)
     conn = get_db()
     c = conn.cursor()
     time = str(datetime.now())
-    s = 'INSERT INTO squawks VALUES ("{}", "{}")'.format(time, str(request.form["squawk"]))
+    s = 'DELETE from prices'
     c.execute(s)
+    conn.commit()
+    print('records removed')
+    table_json = json.loads(tabledata)
+    for item in table_json:
+        tenor = item['tenor']
+        broker = item['broker']
+        if 'bid' in item:
+            p = float(item['bid'])
+            direction = 'buy'
+        else:
+            p = float(item['ask'])
+            direction = 'sell'
+        qty = int(item['qty'])
+        firm_price = 'True'
+        client = item['client']
+        s = 'INSERT INTO prices VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")'.format(broker, tenor, p, direction, qty, firm_price, client, str(datetime.now()))
+        c.execute(s)
+    
     conn.commit()
     conn.close()
     return redirect('/')
+    #return "hello world"
 
 if __name__ == '__main__':
     app.run(debug=True)
