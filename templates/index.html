@@ -157,21 +157,51 @@ $BTN.click(function () {
     headers.push($(this).text().toLowerCase());
   });
   
+  var headers_buy = headers.slice(0, 5)
+  var headers_sell = headers.slice(5, 9).concat(headers[0])
+
   // Turn all existing rows into a loopable array
   $rows.each(function () {
     var $td = $(this).find('td');
-    var h = {};
+    var line = "";
     
+    var h = {}
     // Use the headers from earlier to name our hash keys
-    headers.forEach(function (header, i) {
-      h[header] = $td.eq(i).text();   
+    headers_buy.forEach(function (header, i) {
+      h[header] = $td.eq(i).text();
+      //line = line + $td.eq(i).text() + ",";   
     });
     
     data.push(h);
+    h = {};
+    headers_sell.forEach(function (header, i) {
+      h[header] = $td.eq(i).text();
+      //line = line + $td.eq(i).text() + ",";   
+    });
+    data.push(h);
   });
+  // construct an HTTP request
+  /*var xhr = new XMLHttpRequest();
+  xhr.open("POST", "/update", true);
+  xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
   
-  // Output the result
-  $EXPORT.text(JSON.stringify(data));
+  // send the collected data as JSON
+  xhr.send(JSON.stringify(data));
+  */
+
+  $.ajax({
+      url: '/update',
+      data: {tabledata : JSON.stringify(data)},
+      type: 'POST',
+      success: function(response) {
+          console.log(JSON.stringify(data));
+      },
+      error: function(error) {
+          console.log(error);
+      }
+  });
+
+  //$EXPORT.text(JSON.stringify(data));
 });
   //# sourceURL=pen.js
   </script>
