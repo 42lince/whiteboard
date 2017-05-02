@@ -175,7 +175,12 @@ $BTN.click(function () {
     data.push(h);
     h = {};
     headers_sell.forEach(function (header, i) {
-      h[header] = $td.eq(i).text();
+      if (i + 5 >= headers.length){
+        h[header] = $td.eq(0).text();
+      }
+      else {
+        h[header] = $td.eq(i+5).text();        
+      }
       //line = line + $td.eq(i).text() + ",";   
     });
     data.push(h);

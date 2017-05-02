@@ -65,7 +65,8 @@ def root():
     
 
     tablerows = []
-    for key in d.keys():
+    sorted_keys = sorted(d.keys())
+    for key in sorted_keys:
         d[key]['buy'].sort(key=lambda x: x.p, reverse=True)
         d[key]['sell'].sort(key=lambda x : x.p, reverse=True)
         i = 0
@@ -101,19 +102,23 @@ def update():
     print('records removed')
     table_json = json.loads(tabledata)
     for item in table_json:
-        tenor = item['tenor']
-        broker = item['broker']
-        if 'bid' in item:
-            p = float(item['bid'])
-            direction = 'buy'
-        else:
-            p = float(item['ask'])
-            direction = 'sell'
-        qty = int(item['qty'])
-        firm_price = 'True'
-        client = item['client']
-        s = 'INSERT INTO prices VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")'.format(broker, tenor, p, direction, qty, firm_price, client, str(datetime.now()))
-        c.execute(s)
+        if '' not in item.values():
+            print(item)
+            tenor = item['tenor']
+            broker = item['broker']
+            if 'bid' in item:
+                p = float(item['bid'])
+                direction = 'buy'
+            else:
+                print(item['ask'])
+                p = float(item['ask'])
+
+                direction = 'sell'
+            qty = int(item['qty'])
+            firm_price = 'True'
+            client = item['client']
+            s = 'INSERT INTO prices VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")'.format(broker, tenor, p, direction, qty, firm_price, client, str(datetime.now()))
+            c.execute(s)
     
     conn.commit()
     conn.close()
